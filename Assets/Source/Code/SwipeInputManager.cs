@@ -1,6 +1,7 @@
 using UnityEngine;
 using System;
 using System.Collections.Generic;
+using UnityEngine.EventSystems;
 
 
 namespace Source.Code
@@ -12,7 +13,16 @@ namespace Source.Code
         private bool _isTouched;
         
         const float MIN_SWIPE_DISTANCE = 125f;
-        private Dictionary<SwipeDirection, bool> _swipeDirections = new Dictionary<SwipeDirection, bool>();
+        
+        private bool[] _swipeDirections = new bool[4];
+        
+        
+        public delegate void MoveDelegate(bool[] directions);
+        public MoveDelegate OnMove;
+        
+        public delegate void ClickDelegate(Vector2 pos);
+        public ClickDelegate OnClick;
+        
 
         private Vector2 TouchPosition() => Input.mousePosition;
 
@@ -27,12 +37,14 @@ namespace Source.Code
         }
         private void Update()
         {
+            if(EventSystem.current.IsPointerOverGameObject()) return;
+            
             if (IsTouchStarted)
             {
                 _touchPosition = TouchPosition();
                 _isTouched = true;
             }
-            else if (IsTouchEnded)
+            else if (IsTouchEnded && _isTouched)
             {
                 Swipe();
                 _isTouched = false;
@@ -45,17 +57,17 @@ namespace Source.Code
 
         private void Swipe()
         {
-          if(_swipeDirections[SwipeDirection.Left])
-              Debug.Log("Swipe Left");
-          
-            if(_swipeDirections[SwipeDirection.Right])
-                Debug.Log("Swipe Right");
-            
-            if(_swipeDirections[SwipeDirection.Up])
-                Debug.Log("Swipe Up");
-            
-            if(_swipeDirections[SwipeDirection.Down])
-                Debug.Log("Swipe Down");
+            if(_swipeDirections[0] || _swipeDirections[1] || _swipeDirections[2] || _swipeDirections[3])
+            {
+                OnMove?.Invoke(_swipeDirections);
+                Debug.Log("Swipe" );
+            }
+            else
+            {
+                OnClick?.Invoke(TouchPosition());
+                Debug.Log("Click");
+            }
+         
         }
 
         private void CalcSwipeDistance()
@@ -71,31 +83,15 @@ namespace Source.Code
         {
             if(_swipeDelta.magnitude > MIN_SWIPE_DISTANCE)
             {
-                float x = _swipeDelta.x;
-                float y = _swipeDelta.y;
-                if (Mathf.Abs(x) > Mathf.Abs(y))
+                if (Mathf.Abs(_swipeDelta.x) > Mathf.Abs(_swipeDelta.y))
                 {
-                    if (x < 0)
-                    {
-                        _swipeDirections[SwipeDirection.Left] = true;
-                    }
-                    else
-                    {
-                        _swipeDirections[SwipeDirection.Right] = true;
-                    }
-                }
-                else
+                      _swipeDirections[(int) SwipeDirection.Left] = (_swipeDelta.x < 0);
+                                    _swipeDirections[(int) SwipeDirection.Right] = (_swipeDelta.x > 0);
+                }else
                 {
-                    if (y < 0)
-                    {
-                        _swipeDirections[SwipeDirection.Down] = true;
-                    }
-                    else
-                    {
-                        _swipeDirections[SwipeDirection.Up] = true;
-                    }
+                    _swipeDirections[(int) SwipeDirection.Up] = (_swipeDelta.y > 0);
+                    _swipeDirections[(int) SwipeDirection.Down] = (_swipeDelta.y < 0);
                 }
-                
                 Swipe();
             }
         }
@@ -103,14 +99,14 @@ namespace Source.Code
         
         private void Reset()
         {
-            _swipeDirections.Add(SwipeDirection.Left, false);
-            _swipeDirections.Add(SwipeDirection.Right, false);
-            _swipeDirections.Add(SwipeDirection.Up, false);
-            _swipeDirections.Add(SwipeDirection.Down, false);
+            
             _touchPosition = Vector2.zero;
             _swipeDelta = Vector2.zero;
             _isTouched = false;
-            
+            for(int i =0; i < _swipeDirections.Length; i++)
+            {
+                _swipeDirections[i] = false;
+            }
         }
     }
 }

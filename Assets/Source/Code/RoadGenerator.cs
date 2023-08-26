@@ -38,6 +38,7 @@ namespace Source.Code
         public void StartLevel()
         {
             _currentScrollSpeed = scrollSpeed;
+            SwipeInputManager.Instance.enabled = true;
         }
     
         private void CreateNextSegment()
@@ -55,6 +56,7 @@ namespace Source.Code
 
         public void ResetLevel()
         {
+            SwipeInputManager.Instance.enabled = false;
             _currentScrollSpeed = 0;
             while (_segments.Count > 0)
             {
