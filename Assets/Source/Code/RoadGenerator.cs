@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -12,11 +13,24 @@ namespace Source.Code
     
         private  List<GameObject> _segments = new List<GameObject>();
         private float _currentScrollSpeed;
-
-        private void Start()
+        
+ 
+        private void Awake()
         {
             ResetLevel();
             //StartLevel();
+        }
+        
+        private void OnEnable()
+        {
+            GameActions.Instance.OnGameStarted += StartLevel;
+            GameActions.Instance.OnGameStopped += ResetLevel;
+        }
+    
+        private void OnDisable()
+        {
+            GameActions.Instance.OnGameStarted -= StartLevel;
+            GameActions.Instance.OnGameStopped -= ResetLevel;
         }
 
         private void FixedUpdate()
@@ -35,7 +49,7 @@ namespace Source.Code
             }
         }
 
-        public void StartLevel()
+        private void StartLevel()
         {
             _currentScrollSpeed = scrollSpeed;
             SwipeInputManager.Instance.enabled = true;
@@ -54,7 +68,7 @@ namespace Source.Code
             _segments.Add(roadGo);
         }
 
-        public void ResetLevel()
+        private void ResetLevel()
         {
             SwipeInputManager.Instance.enabled = false;
             _currentScrollSpeed = 0;
